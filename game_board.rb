@@ -1,3 +1,5 @@
+require 'pry-byebug'
+
 class Knight
   attr_accessor :position, :previous
   attr_reader :icon
@@ -30,6 +32,7 @@ class Graph
     @nodes = []
     generate_board
     assign_edges
+    puts "\n\nStarting position:"
     board_display
   end
 
@@ -98,31 +101,102 @@ class Graph
     (num1 - num2).abs
   end
 
+  # def pathfinder(start, dest, paths = [], checked = [])
+  #   start = find(start) if start.is_a?(String)
+  #   checked << start
+  #   dest = find(dest) if dest.is_a?(String)
+
+  #   visited = []
+  #   to_visit = []
+  #   to_visit << start
+
+  #   start.edges.each do |edge|
+  #     pathfinder(edge, dest, paths, checked) unless checked.include?(edge)
+  #   end
+
+  #   until to_visit.empty?
+  #     return paths if visited.length > 6
+  #     current = to_visit.pop
+
+  #     if current.value == destination
+  #       paths << visited
+  #     elsif current_node.edges.include?(destination_node)
+  #       to_visit << destination_node
+  #     else
+  #       current_node.edges.each do |node|
+  #         unless visited.include?(node)
+  #           to_visit << node
+  #         end
+  #       end
+  #     end
+  #   end
+  # end
+
+  def select_closest(destination, to_visit)
+    values = []
+    val_integers = []
+    to_visit.each { |node| values << node.value }
+    values.each { |val| val_integers << val.split(',').join.to_i }
+    destination = destination.split(',').join.to_i
+
+    difference = 100
+    closest = nil
+    val_integers.each do |integer|
+      if diff(integer, destination) < difference
+        difference = diff(integer, destination)
+        closest = integer.to_s.split('')
+        closest.insert(1, ',')
+      end
+    end
+    find(closest.join)
+  end
+
   def shortest_path(start, destination)
     root_node = find(start)
+    destination_node = find(destination)
     visited = []
     to_visit = []
 
-    # add root node to visited list and to_visit queue
-    visited << root_node
     to_visit << root_node
 
     until to_visit.empty?
-      current_node = to_visit.shift
+      current_node = select_closest(destination, to_visit)
+      to_visit.delete(select_closest(destination, to_visit))
+      # current_node = to_visit.pop
+      visited << current_node
+
       if current_node.value == destination
         @knight.previous = @knight.position
         @knight.position = destination
-        board_display
+
+        i = visited.find_index(current_node)
+        visited = visited[0..i]
+        # visited.each_with_index do |node_a, ind_a|
+        #   visited.each_with_index do |node_b, ind_b|
+        #     next unless ind_a < ind_b && node_a.edges.include?(node_b)
+
+        #     visited = visited[0..ind_a] + visited[ind_b..]
+        #   end
+        # end
 
         puts "You made it in #{visited.size - 1} moves! Here's your path:"
-        visited.each { |node| print " -> [#{node.value}]" }
+        visited.each_with_index do |node, i|
+          if i == 0
+            print "[#{node.value}]"
+          else
+            print " -> [#{node.value}]"
+          end
+        end
         return puts ''
-      end
-      # node not found, add adjacent nodes to be visited if not already
-      current_node.edges.each do |node|
-        if !visited.include?(node)
-          visited << node
-          to_visit << node
+        # return board_display
+      elsif current_node.edges.include?(destination_node)
+        to_visit << destination_node
+      else
+        to_visit = []
+        current_node.edges.each do |node|
+          unless visited.include?(node)
+            to_visit << node
+          end
         end
       end
     end
@@ -130,4 +204,12 @@ class Graph
 end
 
 graph = Graph.new('1,1')
-graph.shortest_path('1,1', '3,3')
+# graph.shortest_path('1,1', '8,2')
+graph.nodes.each { |node| graph.shortest_path('1,1', node.value) }
+
+# target = graph.find('2,8')
+# target.edges.each { |edge| print "#{edge.value} | "}
+puts ''
+# graph.pathfinder('1,1', '8,1')
+
+# puts graph.select_closest('1,1', ['1,1', '2,2', '3,3', '4,4'])
