@@ -12,11 +12,12 @@ class Knight
 end
 
 class GraphNode
-  attr_accessor :value, :edges
+  attr_accessor :value, :parent, :edges
 
-  def initialize(value)
+  def initialize(value, parent = nil)
     @value = value
     @edges = []
+    @parent = parent
   end
 
   def add_edge(edge)
@@ -132,6 +133,37 @@ class Graph
   #   end
   # end
 
+  def minKnightMoves(x, y)
+    steps = [[2, 1], [2, -1], [-2, 1], [-2, -1], [1, 2], [1, -2], [-1, 2], [-1, -2]]
+    visited = []
+    to_visit = [[1, 1]]
+
+    until to_visit.empty?
+      coords = to_visit.shift
+
+      if coords[0] == x && coords[1] == y
+        visited.push(coords)
+        return visited
+      end
+
+      steps.each do |step|
+        nxtc = [coords[0] + step[0], coords[1] + step[1]]
+
+        next if coords[0] > 8 || coords[0] < 1 || coords[1] > 8 || coords[1] < 1
+
+        next unless (nxtc[0] >= -2 && x >= -2 && nxtc[1] >= -2 && y >= -2) ||
+                    (nxtc[0] >= 2 && x >= 2 && nxtc[1] >= 2 && y >= 2) ||
+                    (nxtc[0] >= -2 && x >= -2 && nxtc[1] >= 2 && y >= 2) ||
+                    (nxtc[0] >= 2 && x >= 2 && nxtc[1] >= -2 && y >= -2)
+
+        unless visited.include?(nxtc)
+          to_visit.push(nxtc)
+          visited.push(nxtc)
+        end
+      end
+    end
+  end
+
   def select_closest(destination, to_visit)
     values = []
     val_integers = []
@@ -205,7 +237,7 @@ end
 
 graph = Graph.new('1,1')
 # graph.shortest_path('1,1', '8,2')
-graph.nodes.each { |node| graph.shortest_path('1,1', node.value) }
+# graph.nodes.each { |node| graph.shortest_path('1,1', node.value) }
 
 # target = graph.find('2,8')
 # target.edges.each { |edge| print "#{edge.value} | "}
@@ -213,3 +245,5 @@ puts ''
 # graph.pathfinder('1,1', '8,1')
 
 # puts graph.select_closest('1,1', ['1,1', '2,2', '3,3', '4,4'])
+
+p graph.minKnightMoves(8, 8)
